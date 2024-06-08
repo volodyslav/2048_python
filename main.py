@@ -34,19 +34,11 @@ class Game:
         self.font = pygame.font.SysFont('Arial', 60)
 
         # Rows and cols
-        self.game_values = [
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0],
-            [0, 0, 0, 0]
-        ]
-
-        # Random col and row
-        self.ran_col = random.randint(1, TILE_COLS)
-        self.ran_row = random.randint(1, TILE_ROWS)
-
+        self.game_values = [[0 for _ in range(TILE_ROWS)] for _ in range(TILE_COLS)]
         # FPS
         self.clock = pygame.time.Clock()
+        for i in range(2):
+            self.generate_random()
 
     def run_game(self):
         while True:
@@ -67,6 +59,13 @@ class Game:
         pygame.draw.rect(self.screen, (191, 189, 147), tile_rect)
         self.screen.blit(number, ((TILE_SIZE[0] * col) + 10, (TILE_SIZE[1] * row) - 10))
 
+    def generate_random(self):
+        # Random col and row
+        ran_col = random.randint(1, TILE_COLS)
+        ran_row = random.randint(1, TILE_ROWS)
+        print(f"Random: {ran_row, ran_col}")
+        self.game_values[ran_row - 1][ran_col - 1] = 2
+
     def show_screen(self):
         """Show screen's objects"""
         self.clock.tick(60)
@@ -85,11 +84,12 @@ class Game:
 
                 pygame.draw.rect(self.screen, TILE_COLOR, tile_rect)
 
+        #self.draw_tile_number(self.ran_col, self.ran_row)
+
+
         # Draw tiles with numbers
-        print(f"Random: {self.ran_row, self.ran_col}")
+
         print(f"all values {self.game_values}")
-        self.draw_tile_number(self.ran_col, self.ran_row)
-        self.game_values[self.ran_row - 1][self.ran_col -1] = 2
 
         # Update the screen
         pygame.display.flip()

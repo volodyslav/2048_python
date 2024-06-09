@@ -37,10 +37,12 @@ class Game:
         self.game_values = [[0 for _ in range(TILE_ROWS)] for _ in range(TILE_COLS)]
         # FPS
         self.clock = pygame.time.Clock()
+        #  Generate start number
         for i in range(2):
             self.generate_random()
 
     def run_game(self):
+        """Main while loop"""
         while True:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -48,23 +50,53 @@ class Game:
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_ESCAPE:
                         sys.exit()
+                    elif event.key == pygame.K_RIGHT:
+                        self.move_number_tile("right")
             self.show_screen()
 
-    def draw_tile_number(self, col, row):
-        """Draws tile with number -> movable"""
+    def move_number_tile(self, action):
+        """Moves tiles with numbers"""
+        # Max index
+        max_index = TILE_COLS
+        for i, row in enumerate(self.game_values):
+            for j, col in enumerate(row):
+                if col != 0:
+                    value_index = i+1
+                    if action == "right":
+                        while value_index < max_index:
+                            self.game_values[j + 1][value_index+1]
+
+
+
+    def draw_rect_tiles(self, col, row, color):
+        """Draws tiles' rects"""
         tile_rect = pygame.Rect((((TILE_SIZE[0] * col) - 40),
                                  (TILE_SIZE[1] * row) - 40),
                                 (TILE_SIZE[0] - 20, TILE_SIZE[1] - 20))
-        number = self.font.render(f"{2}", False, (61, 61, 56))
-        pygame.draw.rect(self.screen, (191, 189, 147), tile_rect)
+        pygame.draw.rect(self.screen, color, tile_rect)
+
+    def draw_tile_number(self, col, row):
+        """Draws tile with number -> movable"""
+        self.draw_rect_tiles(col, row, (191, 189, 147))
+        number = self.font.render(f"{self.game_values[row-1][col-1]}", False, (61, 61, 56))
         self.screen.blit(number, ((TILE_SIZE[0] * col) + 10, (TILE_SIZE[1] * row) - 10))
 
     def generate_random(self):
-        # Random col and row
+        """Generates random numbers for tiles with start 2 value"""
         ran_col = random.randint(1, TILE_COLS)
         ran_row = random.randint(1, TILE_ROWS)
         print(f"Random: {ran_row, ran_col}")
-        self.game_values[ran_row - 1][ran_col - 1] = 2
+        # Check if we have some value except 0
+        if self.game_values[ran_row - 1][ran_col - 1] != 0:
+            self.generate_random()
+        else:
+            self.game_values[ran_row - 1][ran_col - 1] = 2
+
+    def draw_tiles(self):
+        """Draw tiles"""
+        for row in range(1, TILE_ROWS+1):
+            for col in range(1, TILE_COLS+1):
+                self.draw_rect_tiles(col, row, TILE_COLOR)
 
     def show_screen(self):
         """Show screen's objects"""
@@ -76,18 +108,14 @@ class Game:
         pygame.draw.rect(self.screen, GAME_BOARD_COLOR, self.board_rect,
                          border_radius=5)
         # Tiles
-        for row in range(1, TILE_ROWS+1):
-            for col in range(1, TILE_COLS+1):
-                tile_rect = pygame.Rect((((TILE_SIZE[0] * col) - 40),
-                                         (TILE_SIZE[1] * row) - 40),
-                                        (TILE_SIZE[0] - 20, TILE_SIZE[1] - 20))
-
-                pygame.draw.rect(self.screen, TILE_COLOR, tile_rect)
-
-        #self.draw_tile_number(self.ran_col, self.ran_row)
-
+        self.draw_tiles()
 
         # Draw tiles with numbers
+        for i, row in enumerate(self.game_values):
+            for j, col in enumerate(row):
+                if col != 0:
+                    print(f"Row and col: {i, j}")
+                    self.draw_tile_number(j+1, i+1)
 
         print(f"all values {self.game_values}")
 

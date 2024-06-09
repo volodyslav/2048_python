@@ -38,7 +38,7 @@ class Game:
         # FPS
         self.clock = pygame.time.Clock()
         #  Generate start number
-        for i in range(2):
+        for i in range(6):
             self.generate_random()
 
     def run_game(self):
@@ -52,19 +52,35 @@ class Game:
                         sys.exit()
                     elif event.key == pygame.K_RIGHT:
                         self.move_number_tile("right")
+                    elif event.key == pygame.K_LEFT:
+                        self.move_number_tile("left")
             self.show_screen()
 
     def move_number_tile(self, action):
         """Moves tiles with numbers"""
         # Max index
-        max_index = TILE_COLS
+        max_index = TILE_COLS - 1
         for i, row in enumerate(self.game_values):
             for j, col in enumerate(row):
                 if col != 0:
-                    value_index = i+1
+                    value_index = j
                     if action == "right":
+                        print("Right")
                         while value_index < max_index:
-                            self.game_values[j + 1][value_index+1]
+                            print(f"Value index: {value_index}")
+                            self.game_values[i][value_index] = 0
+                            value_index += 1
+                            if row[j-1] == col:
+                                self.game_values[i][value_index] = col + col
+                            else:
+                                self.game_values[i][value_index] = col
+                    elif action == "left":
+                        print("left")
+                        while value_index > 0:
+                            print(f"Value index: {value_index}")
+                            self.game_values[i][value_index] = 0
+                            value_index -= 1
+                            self.game_values[i][value_index] = col
 
 
 
@@ -85,7 +101,6 @@ class Game:
         """Generates random numbers for tiles with start 2 value"""
         ran_col = random.randint(1, TILE_COLS)
         ran_row = random.randint(1, TILE_ROWS)
-        print(f"Random: {ran_row, ran_col}")
         # Check if we have some value except 0
         if self.game_values[ran_row - 1][ran_col - 1] != 0:
             self.generate_random()

@@ -38,8 +38,7 @@ class Game:
         # FPS
         self.clock = pygame.time.Clock()
         #  Generate start number
-        for i in range(6):
-            self.generate_random()
+        self.generate_random_tile_number()
 
     def run_game(self):
         """Main while loop"""
@@ -52,9 +51,63 @@ class Game:
                         sys.exit()
                     elif event.key == pygame.K_RIGHT:
                         self.move_number_tile("right")
+                        #self.generate_random_tile_number()
                     elif event.key == pygame.K_LEFT:
                         self.move_number_tile("left")
+                        #self.generate_random_tile_number()
             self.show_screen()
+
+    def generate_random_tile_number(self):
+        """Generate two random tiles with numbers"""
+        for i in range(12):
+            self.generate_random()
+
+    def move_right(self, value_index, max_index, row, col, i):
+        """Check movement to the right"""
+        while value_index < max_index:
+            if value_index == max_index:
+                # Check if 0 0 0 2
+                self.game_values[i][value_index] = col
+            elif row[value_index] == row[value_index + 1]:
+                # Check if 2 == 2
+                self.game_values[i][value_index] = 0
+                self.game_values[i][value_index + 1] = col + col
+            elif row[value_index + 1] == 0:
+                # Check if 2 0 0 2 only == 0 0 0 4
+                self.game_values[i][value_index + 1] = row[value_index]
+                self.game_values[i][value_index] = 0
+
+            elif row[value_index] != row[value_index + 1]:
+                # Check if 0 0 4 2
+                self.game_values[i][value_index] = row[value_index]
+                self.game_values[i][value_index + 1] = row[value_index + 1]
+            else:
+                self.game_values[i][value_index] = 0
+                self.game_values[i][max_index] = col
+            value_index += 1
+
+    def move_left(self, value_index, row, col, i):
+        """Check movement to the left"""
+        while value_index > 0:
+            if value_index == 0:
+                # Check if 2 0 0 0
+                self.game_values[i][value_index] = col
+            elif row[value_index] == row[value_index - 1]:
+                # Check if 2 == 2
+                self.game_values[i][value_index] = 0
+                self.game_values[i][value_index - 1] = col + col
+            elif row[value_index - 1] == 0:
+                # Check if 2 0 0 2 only == 4 0 0 0
+                self.game_values[i][value_index - 1] = row[value_index]
+                self.game_values[i][value_index] = 0
+            elif row[value_index] != row[value_index - 1]:
+                # Check if 4 2 0 0
+                self.game_values[i][value_index] = row[value_index]
+                self.game_values[i][value_index - 1] = row[value_index - 1]
+            else:
+                self.game_values[i][value_index] = 0
+                self.game_values[i][0] = col
+            value_index -= 1
 
     def move_number_tile(self, action):
         """Moves tiles with numbers"""
@@ -65,24 +118,9 @@ class Game:
                 if col != 0:
                     value_index = j
                     if action == "right":
-                        print("Right")
-                        while value_index < max_index:
-                            print(f"Value index: {value_index}")
-                            self.game_values[i][value_index] = 0
-                            value_index += 1
-                            if row[j-1] == col:
-                                self.game_values[i][value_index] = col + col
-                            else:
-                                self.game_values[i][value_index] = col
+                        self.move_right(value_index, max_index, row, col, i)
                     elif action == "left":
-                        print("left")
-                        while value_index > 0:
-                            print(f"Value index: {value_index}")
-                            self.game_values[i][value_index] = 0
-                            value_index -= 1
-                            self.game_values[i][value_index] = col
-
-
+                        self.move_left(value_index, row, col, i)
 
     def draw_rect_tiles(self, col, row, color):
         """Draws tiles' rects"""
@@ -129,10 +167,9 @@ class Game:
         for i, row in enumerate(self.game_values):
             for j, col in enumerate(row):
                 if col != 0:
-                    print(f"Row and col: {i, j}")
                     self.draw_tile_number(j+1, i+1)
 
-        print(f"all values {self.game_values}")
+        #print(f"all values {self.game_values}")
 
         # Update the screen
         pygame.display.flip()

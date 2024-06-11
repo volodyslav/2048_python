@@ -28,7 +28,7 @@ TILE_NUMBER_COLORS = {
     256: (214, 86, 28),
     512: (252, 80, 3),
     1024: (196, 57, 29),
-    2024: (250, 0, 0)
+    2048: (250, 0, 0)
 }
 
 
@@ -65,10 +65,10 @@ class Game:
                         sys.exit()
                     elif event.key == pygame.K_RIGHT:
                         self.move_number_tile("right")
-                        #self.generate_random_tile_number()
+                        #self.generate_random_tile_number(1)
                     elif event.key == pygame.K_LEFT:
                         self.move_number_tile("left")
-                        #self.generate_random_tile_number()
+                        #self.generate_random_tile_number(1)
                     elif event.key == pygame.K_UP:
                         self.move_number_tile("up")
                     elif event.key == pygame.K_DOWN:
@@ -76,9 +76,9 @@ class Game:
 
             self.show_screen()
 
-    def generate_random_tile_number(self):
+    def generate_random_tile_number(self, number=12):
         """Generate two random tiles with numbers"""
-        for i in range(12):
+        for i in range(number):
             self.generate_random()
 
     def move_right(self, value_index, max_index, row, col, i):
@@ -93,6 +93,11 @@ class Game:
                 self.game_values[i][value_index + 1] = col + col
             elif row[value_index + 1] == 0:
                 # Check if 2 0 0 2 only == 0 0 0 4
+                self.game_values[i][value_index + 1] = row[value_index]
+                self.game_values[i][value_index] = 0
+            elif row[value_index] != row[value_index + 1] and value_index == 0 and row[value_index + 2] == 0:
+                # Check if 4 2 0 0
+                self.game_values[i][value_index + 2] = row[value_index + 1]
                 self.game_values[i][value_index + 1] = row[value_index]
                 self.game_values[i][value_index] = 0
             elif row[value_index] != row[value_index + 1]:
@@ -122,9 +127,7 @@ class Game:
                 # Check if 4 2 0 0
                 self.game_values[i][value_index] = row[value_index]
                 self.game_values[i][value_index - 1] = row[value_index - 1]
-            else:
-                self.game_values[i][value_index] = 0
-                self.game_values[i][0] = col
+
             value_index -= 1
 
     def move_up(self, row_index, col, j):
@@ -189,9 +192,18 @@ class Game:
 
     def draw_tile_number(self, col, row, color):
         """Draws tile with number -> movable"""
+        # Size to put number into a center of a rect
+        if color < 10:
+            size = -20
+        if color < 100:
+            size = -4
+        elif color < 900:
+            size = 10
+        else:
+            size = 25
         self.draw_rect_tiles(col, row, TILE_NUMBER_COLORS[color])
         number = self.font.render(f"{self.game_values[row-1][col-1]}", False, "black")
-        self.screen.blit(number, ((TILE_SIZE[0] * col) + 5, (TILE_SIZE[1] * row) - 5))
+        self.screen.blit(number, ((TILE_SIZE[0] * col) - size, (TILE_SIZE[1] * row) - 5))
 
     def generate_random(self):
         """Generates random numbers for tiles with start 2 value"""
@@ -226,8 +238,6 @@ class Game:
             for j, col in enumerate(row):
                 if col != 0:
                     self.draw_tile_number(j+1, i+1, col)
-
-        #print(f"all values {self.game_values}")
 
         # Update the screen
         pygame.display.flip()

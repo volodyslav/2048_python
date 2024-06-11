@@ -17,6 +17,20 @@ TILE_ROWS = 4
 TILE_COLOR = (163, 157, 149)
 TILE_SIZE = (GAME_BOARD_SIZE[0] // TILE_COLS, GAME_BOARD_SIZE[1] // TILE_ROWS)
 
+TILE_NUMBER_COLORS = {
+    2: (191, 189, 147),
+    4: (191, 173, 124),
+    8: (191, 162, 84),
+    16: (201, 159, 44),
+    32: (252, 186, 3),
+    64: (219, 127, 22),
+    128: (199, 105, 62),
+    256: (214, 86, 28),
+    512: (252, 80, 3),
+    1024: (196, 57, 29),
+    2024: (250, 0, 0)
+}
+
 
 class Game:
     def __init__(self):
@@ -31,7 +45,7 @@ class Game:
                                        GAME_BOARD_SIZE)
 
         # Text
-        self.font = pygame.font.SysFont('Arial', 60)
+        self.font = pygame.font.SysFont('Arial', 50)
 
         # Rows and cols
         self.game_values = [[0 for _ in range(TILE_ROWS)] for _ in range(TILE_COLS)]
@@ -51,10 +65,10 @@ class Game:
                         sys.exit()
                     elif event.key == pygame.K_RIGHT:
                         self.move_number_tile("right")
-                        self.generate_random_tile_number()
+                        #self.generate_random_tile_number()
                     elif event.key == pygame.K_LEFT:
                         self.move_number_tile("left")
-                        self.generate_random_tile_number()
+                        #self.generate_random_tile_number()
                     elif event.key == pygame.K_UP:
                         self.move_number_tile("up")
                     elif event.key == pygame.K_DOWN:
@@ -64,7 +78,7 @@ class Game:
 
     def generate_random_tile_number(self):
         """Generate two random tiles with numbers"""
-        for i in range(2):
+        for i in range(12):
             self.generate_random()
 
     def move_right(self, value_index, max_index, row, col, i):
@@ -173,11 +187,11 @@ class Game:
                                 (TILE_SIZE[0] - 20, TILE_SIZE[1] - 20))
         pygame.draw.rect(self.screen, color, tile_rect)
 
-    def draw_tile_number(self, col, row):
+    def draw_tile_number(self, col, row, color):
         """Draws tile with number -> movable"""
-        self.draw_rect_tiles(col, row, (191, 189, 147))
-        number = self.font.render(f"{self.game_values[row-1][col-1]}", False, (61, 61, 56))
-        self.screen.blit(number, ((TILE_SIZE[0] * col) + 10, (TILE_SIZE[1] * row) - 10))
+        self.draw_rect_tiles(col, row, TILE_NUMBER_COLORS[color])
+        number = self.font.render(f"{self.game_values[row-1][col-1]}", False, "black")
+        self.screen.blit(number, ((TILE_SIZE[0] * col) + 5, (TILE_SIZE[1] * row) - 5))
 
     def generate_random(self):
         """Generates random numbers for tiles with start 2 value"""
@@ -211,7 +225,7 @@ class Game:
         for i, row in enumerate(self.game_values):
             for j, col in enumerate(row):
                 if col != 0:
-                    self.draw_tile_number(j+1, i+1)
+                    self.draw_tile_number(j+1, i+1, col)
 
         #print(f"all values {self.game_values}")
 

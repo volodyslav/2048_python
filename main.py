@@ -81,107 +81,59 @@ class Game:
         for i in range(number):
             self.generate_random()
 
-    def move_right(self, value_index, max_index, row, col, i):
+    def move_right(self, max_index, row):
         """Check movement to the right"""
-        while value_index < max_index:
-            if value_index == max_index:
-                # Check if 0 0 0 2
-                self.game_values[i][value_index] = col
-            elif row[value_index] == row[value_index + 1]:
-                # Check if 2 == 2
-                self.game_values[i][value_index] = 0
-                self.game_values[i][value_index + 1] = col + col
-            elif row[value_index + 1] == 0:
-                # Check if 2 0 0 2 only == 0 0 0 4
-                self.game_values[i][value_index + 1] = row[value_index]
-                self.game_values[i][value_index] = 0
-            elif row[value_index] != row[value_index + 1] and value_index == 0 and row[value_index + 2] == 0:
-                # Check if 4 2 0 0
-                self.game_values[i][value_index + 2] = row[value_index + 1]
-                self.game_values[i][value_index + 1] = row[value_index]
-                self.game_values[i][value_index] = 0
-            elif row[value_index] != row[value_index + 1]:
-                # Check if 0 0 4 2
-                self.game_values[i][value_index + 1] = row[value_index + 1]
-                self.game_values[i][value_index] = row[value_index]
-            else:
-                self.game_values[i][value_index] = 0
-                self.game_values[i][max_index] = col
-            value_index += 1
+        self.merge_number_tiles(row, max_index)
+        self.check_zero_index_value(row)
+        self.merge_number_tiles(row, max_index)
 
-    def move_left(self, value_index, row, col, i):
+    def move_left(self, row):
         """Check movement to the left"""
-        while value_index > 0:
-            if value_index == 0:
-                # Check if 2 0 0 0
-                self.game_values[i][value_index] = col
-            elif row[value_index] == row[value_index - 1]:
-                # Check if 2 == 2
-                self.game_values[i][value_index] = 0
-                self.game_values[i][value_index - 1] = col + col
-            elif row[value_index - 1] == 0:
-                # Check if 2 0 0 2 only == 4 0 0 0
-                self.game_values[i][value_index - 1] = row[value_index]
-                self.game_values[i][value_index] = 0
-            elif row[value_index] != row[value_index - 1]:
-                # Check if 4 2 0 0
-                self.game_values[i][value_index] = row[value_index]
-                self.game_values[i][value_index - 1] = row[value_index - 1]
-
-            value_index -= 1
+        row.reverse()
+        self.move_right(0, row)
+        row.reverse()
 
     def move_up(self, row_index, col, j):
         """Check movement to the top"""
-        while row_index > 0:
-            if row_index == 0:
-                # Check if [2] 0 0 0
-                self.game_values[row_index][j] = col
-            elif self.game_values[row_index][j] == self.game_values[row_index - 1][j]:
-                # Check if 2 == 2
-                self.game_values[row_index][j] = 0
-                self.game_values[row_index - 1][j] = col + col
-            elif self.game_values[row_index - 1][j] == 0:
-                # Check if 2 000
-                self.game_values[row_index - 1][j] = self.game_values[row_index][j]
-                self.game_values[row_index][j] = 0
-            row_index -= 1
+        pass
 
     def move_down(self, row_index, col, j, max_index):
-        while row_index < max_index:
-            if row_index == max_index:
-                # Check if 0  0 0 2
-                self.game_values[row_index][j] = col
-            elif self.game_values[row_index + 1][j] == 0:
-                #  0 0 0 2
-                self.game_values[row_index + 1][j] = self.game_values[row_index][j]
-                self.game_values[row_index][j] = 0
-            elif self.game_values[row_index][j] == self.game_values[row_index + 1][j]:
-                # Check if 2 == 2
-                self.game_values[row_index][j] = 0
-                self.game_values[row_index + 1][j] = col + col
-            elif self.game_values[row_index][j] == 0:
-                # Check if 2 000
-                self.game_values[row_index + 1][j] = self.game_values[row_index][j]
-                self.game_values[row_index][j] = 0
-            row_index += 1
+        pass
+
+    def merge_number_tiles(self, row, max_index):
+        """Merges two tiles if they are equal and doesn't merge if nor equals"""
+        for i in range(len(row) - 1):
+            if row[i] == row[i + 1] and i != max_index and row[i] != 0:
+                row[i + 1] = row[i] + row[i]
+                row[i] = 0
+            elif row[i + 1] != row[i] and i != max_index and row[i] != 0:
+                row[i + 1] = row[i + 1]
+                row[i] = row[i]
+            elif row[i + 1] == 0 and row[i] != max_index:
+                row[i + 1] = row[i]
+                row[i] = 0
+
+    def check_zero_index_value(self, row):
+        """Check if the next number doesn't have zero value"""
+        for i in range(len(row) - 1):
+            if row[i + 1] == 0:
+                row[i + 1] = row[i]
+                row[i] = 0
 
     def move_number_tile(self, action):
         """Moves tiles with numbers"""
         # Max index
         max_index = TILE_COLS - 1
-        for i, row in enumerate(self.game_values):
-            for j, col in enumerate(row):
-                if col != 0:
-                    value_index = j
-                    row_index = i
-                    if action == "right":
-                        self.move_right(value_index, max_index, row, col, i)
-                    elif action == "left":
-                        self.move_left(value_index, row, col, i)
-                    elif action == "up":
-                        self.move_up(row_index, col, j)
-                    elif action == "down":
-                        self.move_down(row_index, col, j, max_index)
+        for row in self.game_values:
+            match action:
+                case "right":
+                    self.move_right(max_index, row)
+                case "left":
+                    self.move_left(row)
+
+
+
+
 
     def draw_rect_tiles(self, col, row, color):
         """Draws tiles' rects"""

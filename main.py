@@ -185,15 +185,22 @@ class Game:
         """Draws tile with number -> movable"""
         # Size to put number into a center of a rect
         size = -10 if color < 10 else -1 if color < 100 else 12 if color < 900 else 25
-        number_color = "black" if color < 50 else "white"
+        # check text color
+        number_color = "black" if color < 50 else "white" if color < 300 else (182, 191, 184) \
+            if color < 500 else (247, 255, 249) if color < 1500 else (245, 247, 210)
         self.draw_rect_tiles(col, row, TILE_NUMBER_COLORS[color])
         number = self.font.render(f"{self.game_values[row-1][col-1]}", True, number_color)
         self.screen.blit(number, ((TILE_SIZE[0] * col) - size, (TILE_SIZE[1] * row) - 5))
 
     def draw_score(self):
-        text = self.score_font.render(f"Score: {self.score} Best Score: {self.best_score}",
+        text = self.score_font.render(f"Score: {self.score}",
                                       True, "black")
+        best_score_text = self.score_font.render(f"Best Score: {self.best_score}",
+                                                True, "black")
         text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, 20))
+        best_score_rect = best_score_text.get_rect(center=(SCREEN_WIDTH // 2, 60))
+
+        self.screen.blit(best_score_text, best_score_rect)
         self.screen.blit(text, text_rect)
 
     def generate_random(self):
@@ -219,7 +226,7 @@ class Game:
         winner = [True for row in self.game_values for i, col in enumerate(row) if col == 2048]
         if winner:
             text = self.font.render(f"You won!", True, "black")
-            text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, 60))
+            text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, 120))
             self.screen.blit(text, text_rect)
             self.start_game = False
 
@@ -229,7 +236,7 @@ class Game:
             f.write(str(self.score))
 
     def save_score(self):
-        """Reads scores"""
+        """Reads scores and saves it"""
         if not os.path.exists(os.path.join("score.txt")):
             self.write_score()
         else:
@@ -246,7 +253,7 @@ class Game:
         """Check if the game is over"""
         # Show lose game
         text = self.font.render(f"You lose!", True, "black")
-        text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, 60))
+        text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, 120))
         self.screen.blit(text, text_rect)
 
     def draw_tiles(self):

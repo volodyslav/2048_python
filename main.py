@@ -1,3 +1,5 @@
+import time
+
 import pygame
 import sys
 import random
@@ -46,17 +48,24 @@ class Game:
 
         # Text
         self.font = pygame.font.Font('Roboto-Regular.ttf', 50)
+        self.score_font = pygame.font.Font('Roboto-Regular.ttf', 30)
 
         # Rows and cols
         self.game_values = [[0 for _ in range(TILE_ROWS)] for _ in range(TILE_COLS)]
         # FPS
         self.clock = pygame.time.Clock()
-        #  Generate start number
-        self.generate_random_tile_number()
 
         # Score
         self.score = 0
 
+        # Start game logic
+        self.start_game = False
+
+        # Space text
+        self.font_size = 30
+        self.size_direction = 1
+        self.max_font = 100
+        self.min_font = 20
 
     def run_game(self):
         """Main while loop"""
@@ -65,21 +74,28 @@ class Game:
                 if event.type == pygame.QUIT:
                     sys.exit()
                 elif event.type == pygame.KEYDOWN:
+
                     if event.key == pygame.K_ESCAPE:
                         sys.exit()
-                    elif event.key == pygame.K_RIGHT:
+                    elif event.key == pygame.K_SPACE:
+                        self.start_game = True
+                        #  Generate start number
+                        self.generate_random_tile_number()
+                    elif event.key == pygame.K_RIGHT and self.start_game:
                         self.move_number_tile("right")
                         self.generate_random_tile_number(1)
-                    elif event.key == pygame.K_LEFT:
+                    elif event.key == pygame.K_LEFT and self.start_game:
                         self.move_number_tile("left")
                         self.generate_random_tile_number(1)
-                    elif event.key == pygame.K_UP:
+                    elif event.key == pygame.K_UP and self.start_game:
                         self.move_number_tile("up")
                         self.generate_random_tile_number(1)
-                    elif event.key == pygame.K_DOWN:
+                    elif event.key == pygame.K_DOWN and self.start_game:
                         self.move_number_tile("down")
                         self.generate_random_tile_number(1)
-                    self.score += 1
+
+            if not self.start_game:
+                self.font_size += self.size_direction
             self.show_screen()
 
     def generate_random_tile_number(self, number=2):
@@ -96,7 +112,7 @@ class Game:
     def move_left(self, row):
         """Check movement to the left"""
         row.reverse()
-        self.move_right(0, row)
+        self.move_right(3, row)
         row.reverse()
 
     def move_up(self):
@@ -121,6 +137,9 @@ class Game:
         """Merges two tiles if they are equal and doesn't merge if nor equals"""
         for i in range(len(row) - 1):
             if row[i] == row[i + 1] and i != max_index and row[i] != 0:
+                row[i + 1] = row[i] + row[i]
+                row[i] = 0
+            if row[i] == row[i + 1] and i + 1 == max_index and row[i] != 0:
                 row[i + 1] = row[i] + row[i]
                 row[i] = 0
             if row[i + 1] == 0 and row[i] != max_index:
@@ -168,24 +187,51 @@ class Game:
         self.screen.blit(number, ((TILE_SIZE[0] * col) - size, (TILE_SIZE[1] * row) - 5))
 
     def draw_score(self):
-        text = self.font.render(f"Score: {self.score}", False, "black")
-        self.screen.blit(text, (300, 20))
+        text = self.score_font.render(f"Score: {self.score}", False, "black")
+        text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, 20))
+        self.screen.blit(text, text_rect)
 
     def generate_random(self):
-        """Generates random numbers for tiles with start 2 value"""
-        ran_col = random.randint(1, TILE_COLS)
-        ran_row = random.randint(1, TILE_ROWS)
-        # Check if we have some value except 0
-        if self.game_values[ran_row - 1][ran_col - 1] != 0:
-            self.generate_random()
+        """Generates random numbers for tiles with start value"""
+        # Check if we row has zero values
+        row_col = [(j, i) for j, row in enumerate(self.game_values) for i, col in enumerate(row) if col == 0]
+        print(row_col)
+        # Random tuple
+        if row_col:
+            ran_number = random.choice(row_col)
+            self.score += 1
+            self.game_values[ran_number[0]][ran_number[1]] = 2
         else:
-            self.game_values[ran_row - 1][ran_col - 1] = 2
+            self.start_game = False
+
+    def check_lose(self):
+        """Check if the game is ended"""
+        # Score to 0
+        self.score = 0
+
+        self.game_values = [[0 for _ in range(TILE_ROWS)] for _ in range(TILE_COLS)]
+        print(self.game_values)
+        # Show lose game
+        text = self.font.render(f"You lose!", False, "black")
+        text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, 60))
+        self.screen.blit(text, text_rect)
 
     def draw_tiles(self):
         """Draw tiles"""
         for row in range(1, TILE_ROWS+1):
             for col in range(1, TILE_COLS+1):
                 self.draw_rect_tiles(col, row, TILE_COLOR)
+
+    def show_space_start_game(self):
+        """Show the bouncing text how to start the game"""
+        if self.font_size >= self.max_font or self.font_size <= self.min_font:
+            self.size_direction = -self.size_direction
+
+        font = pygame.font.Font('Roboto-Regular.ttf', self.font_size)
+        text = font.render(f"Click 'Space' to start the game", False, "black")
+        text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+
+        self.screen.blit(text, text_rect)
 
     def show_screen(self):
         """Show screen's objects"""
@@ -207,6 +253,11 @@ class Game:
             for j, col in enumerate(row):
                 if col != 0:
                     self.draw_tile_number(j+1, i+1, col)
+
+        # Draw space start game
+        if not self.start_game:
+            self.show_space_start_game()
+            self.check_lose()
 
         # Update the screen
         pygame.display.flip()

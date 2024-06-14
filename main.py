@@ -1,5 +1,4 @@
-import time
-
+import os
 import pygame
 import sys
 import random
@@ -57,6 +56,7 @@ class Game:
 
         # Score
         self.score = 0
+        self.best_score = 0
 
         # Start game logic
         self.start_game = False
@@ -74,13 +74,14 @@ class Game:
                 if event.type == pygame.QUIT:
                     sys.exit()
                 elif event.type == pygame.KEYDOWN:
-
                     if event.key == pygame.K_ESCAPE:
                         sys.exit()
                     elif event.key == pygame.K_SPACE:
                         self.start_game = True
+                        self.game_values = [[0 for _ in range(TILE_ROWS)] for _ in range(TILE_COLS)]
                         #  Generate start number
                         self.generate_random_tile_number()
+                        self.score = 0
                     elif event.key == pygame.K_RIGHT and self.start_game:
                         self.move_number_tile("right")
                         self.generate_random_tile_number(1)
@@ -96,6 +97,8 @@ class Game:
 
             if not self.start_game:
                 self.font_size += self.size_direction
+
+            self.save_score()
             self.show_screen()
 
     def generate_random_tile_number(self, number=2):
@@ -181,13 +184,15 @@ class Game:
     def draw_tile_number(self, col, row, color):
         """Draws tile with number -> movable"""
         # Size to put number into a center of a rect
-        size = -10 if color < 10 else -4 if color < 100 else 10 if color < 900 else 25
+        size = -10 if color < 10 else -1 if color < 100 else 12 if color < 900 else 25
+        number_color = "black" if color < 50 else "white"
         self.draw_rect_tiles(col, row, TILE_NUMBER_COLORS[color])
-        number = self.font.render(f"{self.game_values[row-1][col-1]}", False, "black")
+        number = self.font.render(f"{self.game_values[row-1][col-1]}", True, number_color)
         self.screen.blit(number, ((TILE_SIZE[0] * col) - size, (TILE_SIZE[1] * row) - 5))
 
     def draw_score(self):
-        text = self.score_font.render(f"Score: {self.score}", False, "black")
+        text = self.score_font.render(f"Score: {self.score} Best Score: {self.best_score}",
+                                      True, "black")
         text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, 20))
         self.screen.blit(text, text_rect)
 
@@ -195,7 +200,6 @@ class Game:
         """Generates random numbers for tiles with start value"""
         # Check if we row has zero values
         row_col = [(j, i) for j, row in enumerate(self.game_values) for i, col in enumerate(row) if col == 0]
-        print(row_col)
         # Random tuple
         if row_col:
             ran_number = random.choice(row_col)
@@ -204,15 +208,44 @@ class Game:
         else:
             self.start_game = False
 
-    def check_lose(self):
-        """Check if the game is ended"""
-        # Score to 0
-        self.score = 0
+    def draw_instructions(self):
+        """Instructions for the game"""
+        text = self.score_font.render(f"Use arrow buttons on the keyboard to move the tiles", True, "black")
+        text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 40))
+        self.screen.blit(text, text_rect)
 
-        self.game_values = [[0 for _ in range(TILE_ROWS)] for _ in range(TILE_COLS)]
-        print(self.game_values)
+    def check_win(self):
+        """Check if the game is won"""
+        winner = [True for row in self.game_values for i, col in enumerate(row) if col == 2048]
+        if winner:
+            text = self.font.render(f"You won!", True, "black")
+            text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, 60))
+            self.screen.blit(text, text_rect)
+            self.start_game = False
+
+    def write_score(self):
+        """Write score into a file"""
+        with open("score.txt", "w") as f:
+            f.write(str(self.score))
+
+    def save_score(self):
+        """Reads scores"""
+        if not os.path.exists(os.path.join("score.txt")):
+            self.write_score()
+        else:
+            with open("score.txt", "r") as f:
+                file = f.read()
+                file_number = int(file)
+                if file_number < self.score:
+                    self.write_score()
+                    self.best_score = self.score
+                else:
+                    self.best_score = file_number
+
+    def check_lose(self):
+        """Check if the game is over"""
         # Show lose game
-        text = self.font.render(f"You lose!", False, "black")
+        text = self.font.render(f"You lose!", True, "black")
         text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, 60))
         self.screen.blit(text, text_rect)
 
@@ -226,9 +259,8 @@ class Game:
         """Show the bouncing text how to start the game"""
         if self.font_size >= self.max_font or self.font_size <= self.min_font:
             self.size_direction = -self.size_direction
-
         font = pygame.font.Font('Roboto-Regular.ttf', self.font_size)
-        text = font.render(f"Click 'Space' to start the game", False, "black")
+        text = font.render(f"Click 'Space' to start the game", True, "black")
         text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
 
         self.screen.blit(text, text_rect)
@@ -257,7 +289,12 @@ class Game:
         # Draw space start game
         if not self.start_game:
             self.show_space_start_game()
-            self.check_lose()
+            if self.score != 0:
+                self.check_lose()
+
+        self.check_win()
+
+        self.draw_instructions()
 
         # Update the screen
         pygame.display.flip()
